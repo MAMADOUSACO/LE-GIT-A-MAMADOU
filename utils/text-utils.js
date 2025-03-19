@@ -113,25 +113,35 @@ const caseConverter = {
       .replace(/\s+/g, '-');
   },
 
-  /**
-   * Detect the case of text
-   * @param {string} text - Input text
-   * @return {string} Case type: 'upper', 'lower', 'title', 'sentence', 'camel', 'pascal', 'snake', 'kebab', or 'mixed'
-   */
-  detectCase(text) {
+/**
+ * Detect the case of text
+ * @param {string} text - Input text
+ * @return {string} Case type: 'upper', 'lower', 'title', 'sentence', 'camel', 'pascal', 'snake', 'kebab', or 'mixed'
+ */
+detectCase(text) {
     text = String(text).trim();
     
     if (!text) return 'empty';
-    if (text === text.toUpperCase()) return 'upper';
-    if (text === text.toLowerCase()) return 'lower';
-    if (text.match(/^[A-Z][a-z0-9]+([A-Z][a-z0-9]+)*$/)) return 'pascal';
-    if (text.match(/^[a-z][a-z0-9]+([A-Z][a-z0-9]+)*$/)) return 'camel';
-    if (text.match(/^[a-z0-9]+(_[a-z0-9]+)*$/)) return 'snake';
-    if (text.match(/^[a-z0-9]+(-[a-z0-9]+)*$/)) return 'kebab';
+    
+    // Check for snake_case first (contains underscores and all lowercase)
+    if (text.includes('_') && text.match(/^[a-z0-9]+(_[a-z0-9]+)+$/)) return 'snake';
+    
+    // Check for kebab-case (contains hyphens and all lowercase)
+    if (text.includes('-') && text.match(/^[a-z0-9]+(-[a-z0-9]+)+$/)) return 'kebab';
+    
+    // Check for camelCase (starts with lowercase, contains uppercase, no spaces)
+    if (text.match(/^[a-z][a-z0-9]*[A-Z]/) && !text.includes(' ')) return 'camel';
+    
+    // Check for PascalCase (starts with uppercase, contains lowercase, no spaces)
+    if (text.match(/^[A-Z][a-z0-9]+[A-Z]/) && !text.includes(' ')) return 'pascal';
+    
+    // Check simple cases for single-word situations
+    if (text === text.toUpperCase() && text.length > 1) return 'upper';
+    if (text === text.toLowerCase() && !text.includes('_') && !text.includes('-')) return 'lower';
     
     // Check for title case
     const words = text.split(/\s+/);
-    const isTitleCase = words.every(word => 
+    const isTitleCase = words.length > 1 && words.every(word => 
       word.charAt(0) === word.charAt(0).toUpperCase() && 
       word.substr(1) === word.substr(1).toLowerCase()
     );
@@ -146,7 +156,7 @@ const caseConverter = {
     if (isSentenceCase) return 'sentence';
     
     return 'mixed';
-  }
+    }
 };
 
 /**
